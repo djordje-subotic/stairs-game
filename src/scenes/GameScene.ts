@@ -110,6 +110,8 @@ export class GameScene extends Phaser.Scene {
     this.targetY = sy - DY;
     this.camY = this.targetY;
 
+    store.resetContinueUsed();
+
     // Slider
     this.spawnSlider();
 
@@ -128,7 +130,7 @@ export class GameScene extends Phaser.Scene {
 
     this.progressBg = this.add.graphics().setScrollFactor(0).setDepth(100);
     this.progressBg.fillStyle(0xffffff, 0.05);
-    this.progressBg.fillRoundedRect(width / 2 - 50, TOP + 32, 100, 4, 2);
+    this.progressBg.fillRoundedRect(width / 2 - 50, TOP + 34, 100, 4, 2);
     this.progressBar = this.add.graphics().setScrollFactor(0).setDepth(101);
 
     this.widthBar = this.add.graphics().setScrollFactor(0).setDepth(101);
@@ -137,7 +139,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: F_BODY, fontStyle: '700', color: C.gold,
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
 
-    this.comboText = this.add.text(width / 2, TOP + 48, '', {
+    this.comboText = this.add.text(width / 2, TOP + 54, '', {
       fontSize: '14px', fontFamily: F_BODY, fontStyle: '600', color: C.gold,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
@@ -195,16 +197,17 @@ export class GameScene extends Phaser.Scene {
     // Animate background orbs
     this.bgMgr.update(dt, this.camY);
 
-    // Vignette on high combo
+    // Vignette on high combo — intensifies with streak
     if (this.combo >= 5) {
       this.vignetteGfx.clear();
-      const a = Math.min((this.combo - 4) * 0.012, 0.07);
+      const a = Math.min((this.combo - 4) * 0.015, 0.1);
       this.vignetteGfx.setAlpha(a);
       const theme = this.bgMgr.getTheme();
-      this.vignetteGfx.fillGradientStyle(theme.bokeh1, theme.bokeh1, 0x000000, 0x000000, 1, 1, 0, 0);
-      this.vignetteGfx.fillRect(0, 0, width, 35);
-      this.vignetteGfx.fillGradientStyle(0x000000, 0x000000, theme.bokeh1, theme.bokeh1, 0, 0, 1, 1);
-      this.vignetteGfx.fillRect(0, height - 35, width, 35);
+      const vc = theme.accent1;
+      this.vignetteGfx.fillGradientStyle(vc, vc, 0x000000, 0x000000, 1, 1, 0, 0);
+      this.vignetteGfx.fillRect(0, 0, width, 45);
+      this.vignetteGfx.fillGradientStyle(0x000000, 0x000000, vc, vc, 0, 0, 1, 1);
+      this.vignetteGfx.fillRect(0, height - 45, width, 45);
     } else {
       this.vignetteGfx.clear();
     }
@@ -219,36 +222,59 @@ export class GameScene extends Phaser.Scene {
       return true;
     });
 
-    // Trail particles from slider
-    if (this.sliding && !this.dead && this.ps.length < 150) {
+    // Trail particles from slider — theme colored
+    if (this.sliding && !this.dead && this.ps.length < 200) {
       const lx = this.slideDir === 'right' ? this.slider.x : this.slider.x + this.stairW;
       const ly = this.slider.y + SH / 2;
-      if (Math.random() > 0.6) {
+      if (Math.random() > 0.5) {
         const theme = this.bgMgr.getTheme();
+        const tc = [theme.accent1, theme.accent2, theme.accent3];
         this.ps.push({
-          x: lx, y: ly + Phaser.Math.FloatBetween(-4, 4),
-          vx: this.slideDir === 'right' ? 1.2 : -1.2,
-          vy: Phaser.Math.FloatBetween(-0.2, 0.2),
-          life: Phaser.Math.FloatBetween(0.12, 0.3),
-          c: theme.bokeh1, s: 2,
+          x: lx, y: ly + Phaser.Math.FloatBetween(-5, 5),
+          vx: (this.slideDir === 'right' ? 1 : -1) * Phaser.Math.FloatBetween(0.8, 1.5),
+          vy: Phaser.Math.FloatBetween(-0.3, 0.3),
+          life: Phaser.Math.FloatBetween(0.15, 0.35),
+          c: tc[Phaser.Math.Between(0, 2)], s: Phaser.Math.FloatBetween(1.5, 2.5),
         });
       }
     }
 
-    // Combo flame around score
+    // Combo flame around score — escalates with streak
     if (this.combo >= 3) {
       const sx = width / 2;
       const sy = 50;
-      if (Math.random() > 0.5) {
+      const intensity = Math.min(this.combo, 15);
+      const spawnRate = 0.6 - intensity * 0.02; // more particles at higher combo
+      if (Math.random() > spawnRate) {
+        const flameColors = this.combo >= 12
+          ? [0xffffff, 0xffeaa7, 0xff6348]
+          : this.combo >= 8
+          ? [0xff6348, 0xfeca57, 0xff4444]
+          : this.combo >= 5
+          ? [0xfdcb6e, 0xe17055, 0xff6348]
+          : [0xfdcb6e, 0xe17055];
         this.ps.push({
-          x: sx + Phaser.Math.FloatBetween(-15, 15),
+          x: sx + Phaser.Math.FloatBetween(-18, 18),
           y: this.cameras.main.scrollY + sy,
-          vx: Phaser.Math.FloatBetween(-0.3, 0.3),
-          vy: Phaser.Math.FloatBetween(-1.5, -0.4),
-          life: Phaser.Math.FloatBetween(0.25, 0.45),
-          c: Math.random() > 0.5 ? 0xfdcb6e : 0xe17055, s: 2.5,
+          vx: Phaser.Math.FloatBetween(-0.4, 0.4),
+          vy: Phaser.Math.FloatBetween(-2, -0.5),
+          life: Phaser.Math.FloatBetween(0.25, 0.5),
+          c: flameColors[Phaser.Math.Between(0, flameColors.length - 1)],
+          s: Phaser.Math.FloatBetween(2, 3.5),
         });
       }
+    }
+
+    // Speed lines at high speed (creates sense of velocity)
+    if (this.currentSpeed > 10 && this.sliding && !this.dead && Math.random() > 0.7) {
+      const lineX = Phaser.Math.Between(0, width);
+      const lineY = this.camY + Phaser.Math.Between(-height * 0.3, height);
+      this.ps.push({
+        x: lineX, y: lineY,
+        vx: 0, vy: 3,
+        life: Phaser.Math.FloatBetween(0.08, 0.15),
+        c: 0xffffff, s: 0.5,
+      });
     }
   }
 
@@ -379,40 +405,108 @@ export class GameScene extends Phaser.Scene {
       if (hangL > 2) createFragment(this, px - hangL, py, hangL, ci, 'left');
     }
 
-    // Particles
-    const pc = perfect ? 0x00cec9 : good ? 0xffffff : 0xff6b6b;
-    this.burst(px + newW / 2, py, pc, perfect ? 10 + this.combo * 2 : good ? 5 : 3);
+    // Particles — theme-colored for perfects
+    const theme = this.bgMgr.getTheme();
+    if (perfect) {
+      const pc = this.combo >= 8 ? 0xfeca57 : 0x00cec9;
+      const count = Math.min(10 + this.combo * 3, 40);
+      this.burst(px + newW / 2, py, pc, count);
+      // Extra theme-colored particles at high combo
+      if (this.combo >= 5) {
+        this.burst(px + newW / 2, py, theme.accent1, Math.floor(count * 0.5));
+        this.burst(px + newW / 2, py, theme.accent2, Math.floor(count * 0.3));
+      }
+    } else if (good) {
+      this.burst(px + newW / 2, py, 0xffffff, 5);
+    } else {
+      this.burst(px + newW / 2, py, 0xff6b6b, 4);
+    }
 
-    // Dust
-    for (let i = 0; i < 3; i++) {
+    // Dust on landing
+    const dustCount = perfect ? 5 : 3;
+    for (let i = 0; i < dustCount; i++) {
       this.ps.push({
         x: px + Phaser.Math.FloatBetween(0, newW), y: py + SH,
-        vx: Phaser.Math.FloatBetween(-0.8, 0.8), vy: Phaser.Math.FloatBetween(-0.4, 0.3),
-        life: Phaser.Math.FloatBetween(0.15, 0.35), c: 0xffffff, s: 1.5,
+        vx: Phaser.Math.FloatBetween(-1.2, 1.2), vy: Phaser.Math.FloatBetween(-0.5, 0.2),
+        life: Phaser.Math.FloatBetween(0.15, 0.4), c: 0xffffff, s: 1.5,
       });
     }
 
-    // Shake
+    // Shake — more dramatic with combo
     if (perfect) {
-      this.cameras.main.shake(Math.min(40 + this.combo * 5, 80), Math.min(0.003 + this.combo * 0.0007, 0.009));
+      const shakeI = Math.min(45 + this.combo * 6, 100);
+      const shakeM = Math.min(0.003 + this.combo * 0.001, 0.012);
+      this.cameras.main.shake(shakeI, shakeM);
     } else if (!good) {
-      this.cameras.main.shake(50, 0.003);
+      this.cameras.main.shake(60, 0.004);
     }
 
-    // Ripple on perfect
+    // Ripple on perfect — escalates dramatically
     if (perfect) {
-      const ring = this.add.circle(px + newW / 2, py + SH / 2, 10, 0x00cec9, 0).setDepth(25);
-      ring.setStrokeStyle(2, 0x00cec9, 0.5);
-      this.tweens.add({ targets: ring, scaleX: 4, scaleY: 4, alpha: 0, duration: 350, onComplete: () => ring.destroy() });
+      const cx = px + newW / 2, cy = py + SH / 2;
+      const theme = this.bgMgr.getTheme();
+
+      // Primary ripple ring
+      const ring = this.add.circle(cx, cy, 10, 0x00cec9, 0).setDepth(25);
+      ring.setStrokeStyle(2, 0x00cec9, 0.6);
+      this.tweens.add({ targets: ring, scaleX: 4.5, scaleY: 4.5, alpha: 0, duration: 350, onComplete: () => ring.destroy() });
+
+      // Second ring at combo 3+
+      if (this.combo >= 3) {
+        const r2 = this.add.circle(cx, cy, 6, 0, 0).setDepth(25);
+        r2.setStrokeStyle(1.5, theme.accent1, 0.35);
+        this.tweens.add({ targets: r2, scaleX: 6, scaleY: 6, alpha: 0, duration: 420, delay: 40, onComplete: () => r2.destroy() });
+      }
+
+      // Third ring + color flash at combo 5+
       if (this.combo >= 5) {
-        const r2 = this.add.circle(px + newW / 2, py + SH / 2, 8, 0, 0).setDepth(25);
-        r2.setStrokeStyle(1.5, 0xffffff, 0.3);
-        this.tweens.add({ targets: r2, scaleX: 5, scaleY: 5, alpha: 0, duration: 400, delay: 60, onComplete: () => r2.destroy() });
+        const r3 = this.add.circle(cx, cy, 8, 0, 0).setDepth(25);
+        r3.setStrokeStyle(1, 0xffffff, 0.25);
+        this.tweens.add({ targets: r3, scaleX: 7, scaleY: 7, alpha: 0, duration: 500, delay: 80, onComplete: () => r3.destroy() });
+
+        // Screen flash with theme color
+        const { width, height } = this.scale;
+        const flash = this.add.rectangle(width / 2, height / 2, width, height, theme.accent1, 0.04).setScrollFactor(0).setDepth(88);
+        this.tweens.add({ targets: flash, alpha: 0, duration: 150, onComplete: () => flash.destroy() });
       }
+
+      // Zoom punch at combo 8+
       if (this.combo >= 8) {
-        this.cameras.main.zoom = 1.015;
-        this.tweens.add({ targets: this.cameras.main, zoom: 1, duration: 120 });
+        this.cameras.main.zoom = 1.02;
+        this.tweens.add({ targets: this.cameras.main, zoom: 1, duration: 150, ease: 'Quad.easeOut' });
       }
+
+      // Bigger zoom at combo 15+
+      if (this.combo >= 15) {
+        this.cameras.main.zoom = 1.035;
+        this.tweens.add({ targets: this.cameras.main, zoom: 1, duration: 200, ease: 'Quad.easeOut' });
+      }
+    }
+
+    // CLUTCH — survived with tiny width (near-death)
+    if (!perfect && newW < 25 && newW > MIN_WIDTH) {
+      const { width: cw2, height: ch2 } = this.scale;
+      const clutchTxt = this.add.text(cw2 / 2, ch2 * 0.42, 'CLUTCH!', {
+        fontSize: '16px', fontFamily: F_HEAD, fontStyle: '700', color: '#ff6b6b', letterSpacing: 4,
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(110).setAlpha(0);
+      this.tweens.add({ targets: clutchTxt, alpha: 1, scaleX: { from: 1.5, to: 1 }, scaleY: { from: 1.5, to: 1 }, duration: 200, ease: 'Back.easeOut' });
+      this.tweens.add({ targets: clutchTxt, alpha: 0, duration: 300, delay: 500, onComplete: () => clutchTxt.destroy() });
+      this.haptic([5, 15, 5, 15, 5]);
+    }
+
+    // COMEBACK — recovered from danger zone to safe width
+    if (newW > this.stairW && this.stairW < 35 && newW >= 50) {
+      const { width: cw3, height: ch3 } = this.scale;
+      const comeTxt = this.add.text(cw3 / 2, ch3 * 0.42, 'COMEBACK!', {
+        fontSize: '16px', fontFamily: F_HEAD, fontStyle: '700', color: '#55efc4', letterSpacing: 4,
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(110).setAlpha(0);
+      this.tweens.add({ targets: comeTxt, alpha: 1, scaleX: { from: 0.5, to: 1.1 }, scaleY: { from: 0.5, to: 1.1 }, duration: 250, ease: 'Back.easeOut' });
+      this.tweens.add({ targets: comeTxt, alpha: 0, scaleX: 1.2, scaleY: 1.2, duration: 350, delay: 600, onComplete: () => comeTxt.destroy() });
+      // Bonus coins for comeback
+      this.coinsEarned += 5;
+      this.coinText.setText(`${this.coinsEarned} ●`);
+      this.burst(px + newW / 2, py, 0x55efc4, 15);
+      sound.milestone();
     }
 
     // Danger
@@ -443,27 +537,42 @@ export class GameScene extends Phaser.Scene {
     // Multiplier
     this.multText.setText(this.multiplier > 1 ? `×${this.multiplier}` : '');
 
-    // Combo tier names
+    // Combo tier names — escalating hype
     let label = '', color = '#00cec9';
-    if (perfect && this.combo >= 15) { label = 'ASCENDED'; color = '#ffffff'; }
-    else if (perfect && this.combo >= 12) { label = 'TRANSCENDENT'; color = '#f0c674'; }
-    else if (perfect && this.combo >= 8) { label = 'GODLIKE'; color = '#ffd56e'; }
+    if (perfect && this.combo >= 20) { label = 'IMMORTAL'; color = '#ffffff'; }
+    else if (perfect && this.combo >= 15) { label = 'ASCENDED'; color = '#ffffff'; }
+    else if (perfect && this.combo >= 12) { label = 'UNSTOPPABLE'; color = '#f0c674'; }
+    else if (perfect && this.combo >= 10) { label = 'GODLIKE'; color = '#ffd56e'; }
+    else if (perfect && this.combo >= 8) { label = 'INSANE'; color = '#ff6348'; }
     else if (perfect && this.combo >= 5) { label = 'BLAZING'; color = '#e17055'; }
     else if (perfect && this.combo >= 3) { label = 'FIRE'; color = '#fdcb6e'; }
     else if (perfect && this.combo > 1) { label = `PERFECT ×${this.combo}`; }
     else if (perfect) { label = 'PERFECT!'; }
     else if (good) { label = 'GOOD'; color = '#ffeaa7'; }
     else { label = 'CLOSE!'; color = '#ff6b6b'; }
-    this.comboText.setText(label).setColor(color).setAlpha(1);
-    this.tweens.add({ targets: this.comboText, alpha: 0, duration: 450, delay: 250 });
 
-    // Popup
-    const ptxt = perfect && this.combo > 1 ? `+${this.combo}` : '+1';
-    const pop = this.add.text(px + newW / 2, py - 6, ptxt, {
-      fontSize: perfect ? '18px' : '12px', fontFamily: F_HEAD, fontStyle: '700',
-      color: perfect ? '#00cec9' : '#dfe6e9',
+    // Scale up the combo text for high combos
+    const comboScale = this.combo >= 10 ? 1.3 : this.combo >= 5 ? 1.15 : 1;
+    this.comboText.setText(label).setColor(color).setAlpha(1).setScale(comboScale);
+    this.tweens.add({
+      targets: this.comboText, alpha: 0, scaleX: comboScale * 1.1, scaleY: comboScale * 1.1,
+      duration: 500, delay: 300,
+    });
+
+    // Popup — bigger at high combo
+    const popVal = perfect ? Math.max(this.combo, 1) : 1;
+    const ptxt = `+${popVal}`;
+    const popSize = perfect && this.combo >= 8 ? '22px' : perfect && this.combo >= 3 ? '18px' : perfect ? '16px' : '12px';
+    const popColor = perfect && this.combo >= 8 ? '#feca57' : perfect ? '#00cec9' : good ? '#dfe6e9' : '#ff6b6b';
+    const pop = this.add.text(px + newW / 2, py - 8, ptxt, {
+      fontSize: popSize, fontFamily: F_HEAD, fontStyle: '700', color: popColor,
     }).setOrigin(0.5).setDepth(90);
-    this.tweens.add({ targets: pop, y: pop.y - 22, alpha: 0, duration: 350, onComplete: () => pop.destroy() });
+    pop.setShadow(0, 1, '#000000', 4, true, true);
+    this.tweens.add({
+      targets: pop, y: pop.y - 28, alpha: 0,
+      scaleX: { from: 1.2, to: 0.8 }, scaleY: { from: 1.2, to: 0.8 },
+      duration: 400, ease: 'Quad.easeOut', onComplete: () => pop.destroy(),
+    });
 
     // New best check
     if (this.score > store.getBest() && this.score > 1) {
@@ -548,64 +657,112 @@ export class GameScene extends Phaser.Scene {
     sound.fall();
     store.addCoins(this.coinsEarned);
 
+    // Slow-motion death
+    this.time.timeScale = 0.3;
+
     const sx = this.slider.x, sy = this.slider.y;
     this.slider.destroy();
 
     const skin = store.getCurrentSkin();
     const mc = skin.palette[this.score % 8].fg;
-    for (let i = 0; i < 10; i++) {
+    // More fragments for dramatic crumble
+    for (let i = 0; i < 15; i++) {
       const frag = this.add.rectangle(
         sx + Phaser.Math.Between(0, this.stairW), sy + Phaser.Math.Between(0, SH),
-        Phaser.Math.Between(8, 16), Phaser.Math.Between(5, 12), mc, 0.8,
+        Phaser.Math.Between(6, 18), Phaser.Math.Between(4, 14), mc, 0.85,
       ).setDepth(30);
       this.tweens.add({
         targets: frag,
-        x: frag.x + Phaser.Math.Between(-80, 80), y: frag.y + Phaser.Math.Between(60, 250),
-        rotation: Phaser.Math.FloatBetween(-2, 2), alpha: 0,
-        duration: Phaser.Math.Between(350, 600), ease: 'Quad.easeIn',
+        x: frag.x + Phaser.Math.Between(-100, 100), y: frag.y + Phaser.Math.Between(80, 300),
+        rotation: Phaser.Math.FloatBetween(-3, 3), alpha: 0,
+        duration: Phaser.Math.Between(400, 700), ease: 'Quad.easeIn',
         onComplete: () => frag.destroy(),
       });
     }
 
-    const { width, height } = this.scale;
-    const wf = this.add.rectangle(width / 2, height / 2, width, height, 0xffffff, 0.18).setScrollFactor(0).setDepth(95);
-    this.tweens.add({ targets: wf, alpha: 0, duration: 120, onComplete: () => wf.destroy() });
-    const rf = this.add.rectangle(width / 2, height / 2, width, height, 0xff0000, 0.08).setScrollFactor(0).setDepth(95);
-    this.tweens.add({ targets: rf, alpha: 0, duration: 250, delay: 80, onComplete: () => rf.destroy() });
-
-    this.cameras.main.shake(130, 0.01);
-    this.haptic([50, 20, 80]);
-
-    this.time.delayedCall(350, () => {
-      this.scene.start('GameOverScene', { score: this.score, bestCombo: this.bestCombo, coins: this.coinsEarned });
-    });
-  }
-
-  private checkMilestone(score: number, x: number, y: number) {
-    const milestones: Record<number, string> = { 10: 'DOUBLE DIGITS', 25: 'QUARTER CENTURY', 50: 'FIFTY', 100: 'CENTURION' };
-    const lbl = milestones[score];
-    if (!lbl) return;
-
-    const skin = store.getCurrentSkin();
-    const count = score >= 50 ? 35 : 20;
-    for (let i = 0; i < count; i++) {
+    // Particles explosion at death point
+    for (let i = 0; i < 20; i++) {
       this.ps.push({
-        x: x + Phaser.Math.FloatBetween(-20, 20 + this.stairW), y: y - 5,
-        vx: Phaser.Math.FloatBetween(-4, 4), vy: Phaser.Math.FloatBetween(-7, -2),
-        life: Phaser.Math.FloatBetween(0.5, 1.1),
-        c: skin.palette[i % skin.palette.length].fg, s: Phaser.Math.FloatBetween(2, 4.5),
+        x: sx + this.stairW / 2, y: sy + SH / 2,
+        vx: Phaser.Math.FloatBetween(-5, 5), vy: Phaser.Math.FloatBetween(-6, -1),
+        life: Phaser.Math.FloatBetween(0.4, 1.0),
+        c: mc, s: Phaser.Math.FloatBetween(1.5, 3.5),
       });
     }
 
     const { width, height } = this.scale;
-    const mt = this.add.text(width / 2, height * 0.35, lbl, {
-      fontSize: '18px', fontFamily: F_HEAD, fontStyle: '700', color: '#ffffff', letterSpacing: 4,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(110).setAlpha(0);
-    mt.setShadow(0, 2, '#000000', 6, true, true);
-    this.tweens.add({ targets: mt, alpha: 1, scaleX: { from: 0.5, to: 1 }, scaleY: { from: 0.5, to: 1 }, duration: 280, ease: 'Back.easeOut' });
-    this.tweens.add({ targets: mt, alpha: 0, y: mt.y - 15, duration: 350, delay: 1000, onComplete: () => mt.destroy() });
 
-    if (score >= 50) { this.time.timeScale = 0.15; this.time.delayedCall(8, () => { this.time.timeScale = 1; }); }
+    // White flash — sharp impact
+    const wf = this.add.rectangle(width / 2, height / 2, width, height, 0xffffff, 0.22).setScrollFactor(0).setDepth(95);
+    this.tweens.add({ targets: wf, alpha: 0, duration: 100, onComplete: () => wf.destroy() });
+
+    // Red flash — danger/death
+    const rf = this.add.rectangle(width / 2, height / 2, width, height, 0xff0000, 0.12).setScrollFactor(0).setDepth(95);
+    this.tweens.add({ targets: rf, alpha: 0, duration: 300, delay: 60, onComplete: () => rf.destroy() });
+
+    // Dark vignette closing in
+    const vg = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0).setScrollFactor(0).setDepth(94);
+    this.tweens.add({ targets: vg, alpha: 0.3, duration: 400 });
+
+    this.cameras.main.shake(150, 0.012);
+    this.haptic([50, 20, 80]);
+
+    // Restore time, then transition
+    this.time.delayedCall(6, () => { this.time.timeScale = 1; });
+    this.time.delayedCall(500, () => {
+      // Pause this scene but keep it alive (for continue)
+      this.scene.pause();
+      this.scene.launch('GameOverScene', {
+        score: this.score, bestCombo: this.bestCombo, coins: this.coinsEarned,
+        stairW: this.stairW,
+      });
+    });
+  }
+
+  private checkMilestone(score: number, x: number, y: number) {
+    const milestones: Record<number, string> = { 10: 'DOUBLE DIGITS', 25: 'QUARTER CENTURY', 50: 'FIFTY', 75: 'LEGENDARY', 100: 'CENTURION' };
+    const lbl = milestones[score];
+    if (!lbl) return;
+
+    const skin = store.getCurrentSkin();
+    const count = score >= 75 ? 45 : score >= 50 ? 35 : score >= 25 ? 25 : 20;
+    for (let i = 0; i < count; i++) {
+      this.ps.push({
+        x: x + Phaser.Math.FloatBetween(-30, 30 + this.stairW), y: y - 5,
+        vx: Phaser.Math.FloatBetween(-5, 5), vy: Phaser.Math.FloatBetween(-8, -2),
+        life: Phaser.Math.FloatBetween(0.5, 1.3),
+        c: skin.palette[i % skin.palette.length].fg, s: Phaser.Math.FloatBetween(2, 5),
+      });
+    }
+
+    const { width, height } = this.scale;
+
+    // Screen flash for milestone celebration
+    const theme = this.bgMgr.getTheme();
+    const mFlash = this.add.rectangle(width / 2, height / 2, width, height, theme.accent1, 0.06).setScrollFactor(0).setDepth(89);
+    this.tweens.add({ targets: mFlash, alpha: 0, duration: 400, onComplete: () => mFlash.destroy() });
+
+    // Milestone text with dramatic entrance
+    const fontSize = score >= 75 ? '22px' : '18px';
+    const mt = this.add.text(width / 2, height * 0.35, lbl, {
+      fontSize, fontFamily: F_HEAD, fontStyle: '700', color: '#ffffff', letterSpacing: 6,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(110).setAlpha(0);
+    mt.setShadow(0, 3, '#000000', 8, true, true);
+    this.tweens.add({ targets: mt, alpha: 1, scaleX: { from: 0.3, to: 1 }, scaleY: { from: 0.3, to: 1 }, duration: 320, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: mt, alpha: 0, y: mt.y - 20, scaleX: 1.1, scaleY: 1.1, duration: 400, delay: 1200, onComplete: () => mt.destroy() });
+
+    // Slow-mo for epic moments
+    if (score >= 25) {
+      const slowDur = score >= 100 ? 12 : score >= 75 ? 10 : score >= 50 ? 8 : 5;
+      this.time.timeScale = 0.12;
+      this.time.delayedCall(slowDur, () => { this.time.timeScale = 1; });
+    }
+
+    // Zoom punch on milestone
+    this.cameras.main.zoom = score >= 75 ? 1.04 : 1.025;
+    this.tweens.add({ targets: this.cameras.main, zoom: 1, duration: 250, ease: 'Quad.easeOut' });
+
+    sound.milestone();
     this.haptic([10, 10, 10, 10, 10]);
   }
 
@@ -635,26 +792,28 @@ export class GameScene extends Phaser.Scene {
   private updateProgressBar() {
     this.progressBar.clear();
     const { width } = this.scale;
+    const barY = 75 + 34; // TOP + 34
     const next = getNextTier(this.score);
-    if (!next) { this.progressBar.fillStyle(0xff4757, 0.7); this.progressBar.fillRoundedRect(width / 2 - 50, 87, 100, 4, 2); return; }
+    if (!next) { this.progressBar.fillStyle(0xff4757, 0.7); this.progressBar.fillRoundedRect(width / 2 - 50, barY, 100, 4, 2); return; }
     const diff = getDifficulty(this.score);
     const p = (this.score - diff.tierStart) / (diff.tierEnd - diff.tierStart);
     const bw = Math.max(3, 100 * p);
     const cols: Record<string, number> = { 'NICE': 0xf0c674, 'FAST': 0xfab1a0, 'HARD': 0xff6b6b, 'INSANE': 0xff4757 };
     this.progressBar.fillStyle(cols[next.name] || 0xa29bfe, 0.6);
-    this.progressBar.fillRoundedRect(width / 2 - 50, 87, bw, 4, 2);
+    this.progressBar.fillRoundedRect(width / 2 - 50, barY, bw, 4, 2);
   }
 
   private updateWidthBar() {
     this.widthBar.clear();
     const { width } = this.scale;
+    const barY = 75 + 42; // TOP + 42, below progress bar
     const pct = this.stairW / DEFAULT_SW;
     const bx = width / 2 - 35;
     this.widthBar.fillStyle(0xffffff, 0.04);
-    this.widthBar.fillRoundedRect(bx, 95, 70, 3, 1.5);
+    this.widthBar.fillRoundedRect(bx, barY, 70, 3, 1.5);
     const c = pct > 0.6 ? 0x4ecdc4 : pct > 0.35 ? 0xf0c674 : 0xff6b6b;
     this.widthBar.fillStyle(c, 0.5);
-    this.widthBar.fillRoundedRect(bx, 95, 70 * pct, 3, 1.5);
+    this.widthBar.fillRoundedRect(bx, barY, 70 * pct, 3, 1.5);
   }
 
   private burst(x: number, y: number, c: number, n: number) {
@@ -665,6 +824,45 @@ export class GameScene extends Phaser.Scene {
 
   private haptic(pattern: number | number[]) {
     try { navigator.vibrate?.(pattern); } catch (_) { /* */ }
+  }
+
+  /** Called from GameOverScene on continue — revive in-place */
+  revive() {
+    this.dead = false;
+    this.sliding = true;
+    this.combo = 0;
+    this.multiplier = 1;
+    this.goodStreak = 0;
+
+    // Bonus width on revive
+    this.stairW = Math.max(this.stairW + 15, 40);
+    this.lastW = this.stairW;
+
+    // Re-place a stair at last position with new width
+    const ci = this.score % 8;
+    const sx = this.lastX + (this.lastW - this.stairW) / 2;
+    const rStair = createStair(this, Math.max(0, sx), this.lastY, this.stairW, ci);
+    this.placed.push(rStair);
+    this.lastX = Math.max(0, sx);
+
+    // Flash green
+    const { width, height } = this.scale;
+    const flash = this.add.rectangle(width / 2, height / 2, width, height, 0x00cec9, 0.12).setScrollFactor(0).setDepth(95);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 400, onComplete: () => flash.destroy() });
+
+    // Clear vignette
+    this.vignetteGfx.clear();
+
+    // Update HUD
+    this.scoreText.setText(`${this.score}`);
+    this.coinText.setText(`${this.coinsEarned} ●`);
+    this.updateWidthBar();
+    this.updateProgressBar();
+
+    // Spawn next slider
+    this.spawnSlider();
+    sound.whoosh();
+    sound.grow();
   }
 
   private cleanOldStairs() {

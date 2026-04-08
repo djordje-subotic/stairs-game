@@ -173,4 +173,52 @@ export const store = {
   setBestCombo(n: number) {
     localStorage.setItem(KEY_BEST_COMBO, String(n));
   },
+
+  // ---- Continue system ----
+  _dailyMax(): number { return this.isAdFree() ? 2 : 1; },
+  _dailyUsed(): number {
+    const raw = localStorage.getItem('stairs-daily-continue');
+    if (!raw) return 0;
+    try {
+      const d = JSON.parse(raw);
+      if (d.date !== new Date().toDateString()) return 0;
+      return d.count ?? 0;
+    } catch { return 0; }
+  },
+  /** Returns true if user has a free daily continue available */
+  hasDailyContinue(): boolean {
+    return this._dailyUsed() < this._dailyMax();
+  },
+  /** How many free continues remaining today */
+  dailyContinuesLeft(): number {
+    return Math.max(0, this._dailyMax() - this._dailyUsed());
+  },
+  /** Use up one daily free continue */
+  useDailyContinue() {
+    const used = this._dailyUsed();
+    localStorage.setItem('stairs-daily-continue', JSON.stringify({
+      date: new Date().toDateString(),
+      count: used + 1,
+    }));
+  },
+  /** Coin cost for continue: 30 for ad-free, 50 for free users */
+  continueCoinCost(): number { return this.isAdFree() ? 30 : 50; },
+  /** Can afford a coin continue */
+  canCoinContinue(): boolean {
+    return this.getCoins() >= this.continueCoinCost();
+  },
+  /** Spend coins for a continue */
+  spendCoinContinue(): boolean {
+    return this.spendCoins(this.continueCoinCost());
+  },
+  /** Check if this run already used a continue */
+  hasUsedContinue(): boolean {
+    return localStorage.getItem('stairs-used-continue') === '1';
+  },
+  markContinueUsed() {
+    localStorage.setItem('stairs-used-continue', '1');
+  },
+  resetContinueUsed() {
+    localStorage.removeItem('stairs-used-continue');
+  },
 };

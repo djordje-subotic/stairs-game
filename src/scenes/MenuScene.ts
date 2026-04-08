@@ -95,9 +95,13 @@ export class MenuScene extends Phaser.Scene {
     // Current theme/skin
     const themeId = store.getCurrentTheme();
     const skin = store.getCurrentSkin();
-    const icons: Record<string, string> = { building: '🏙️', sushi: '🍣', burger: '🍔', cake: '🎂', dj: '🎵' };
+    const themeNames: Record<string, string> = {
+      building: 'Skyscraper', sushi: 'Sushi Tower', burger: 'Mega Burger', cake: 'Layer Cake',
+      dj: 'DJ Stack', pixel: 'Pixel Retro', aquarium: 'Aquarium', space: 'Space Station',
+      candy: 'Sweet Candy', bamboo: 'Zen Bamboo', icecream: 'Ice Cream',
+    };
     const parts: string[] = [];
-    if (themeId !== 'building') parts.push(icons[themeId] || themeId);
+    if (themeId !== 'building') parts.push(themeNames[themeId] || themeId);
     if (skin.id !== 'classic') parts.push(skin.name);
     if (parts.length > 0) {
       this.add.text(w / 2, h * 0.63, parts.join('  ·  '), {

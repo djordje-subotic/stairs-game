@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.stacko.game',
+  appId: 'com.stackoblock.game',
   appName: 'STACKO',
   webDir: 'dist',
   server: {
