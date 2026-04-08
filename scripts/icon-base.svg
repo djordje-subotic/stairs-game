@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0c0c18"/>
+      <stop offset="100%" stop-color="#06060c"/>
+    </linearGradient>
+    <linearGradient id="s-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b7cf0"/>
+      <stop offset="100%" stop-color="#6c5ce7"/>
+    </linearGradient>
+    <linearGradient id="t-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d9af0"/>
+      <stop offset="100%" stop-color="#0984e3"/>
+    </linearGradient>
+    <linearGradient id="a-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1dd1a1"/>
+      <stop offset="100%" stop-color="#00b894"/>
+    </linearGradient>
+    <linearGradient id="c-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5d98a"/>
+      <stop offset="100%" stop-color="#f0c674"/>
+    </linearGradient>
+    <linearGradient id="k-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f08a70"/>
+      <stop offset="100%" stop-color="#e17055"/>
+    </linearGradient>
+    <linearGradient id="o-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f06aaa"/>
+      <stop offset="100%" stop-color="#e84393"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="3" dy="5" stdDeviation="6" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="180" fill="url(#bg)"/>
+
+  <!-- Subtle bokeh -->
+  <circle cx="280" cy="220" r="120" fill="#6c5ce7" opacity="0.04"/>
+  <circle cx="750" cy="650" r="100" fill="#f0c674" opacity="0.035"/>
+  <circle cx="180" cy="750" r="80" fill="#e84393" opacity="0.03"/>
+  <circle cx="800" cy="200" r="70" fill="#00b894" opacity="0.03"/>
+
+  <!-- Stacked blocks in center-bottom area -->
+  <!-- Block 3 (bottom) - orange -->
+  <g filter="url(#shadow)">
+    <rect x="362" y="680" width="300" height="80" rx="14" fill="#e17055"/>
+    <rect x="362" y="680" width="300" height="34" rx="14" ry="14" fill="url(#k-top)"/>
+    <rect x="380" y="686" width="120" height="6" rx="3" fill="white" opacity="0.18"/>
+  </g>
+
+  <!-- Block 2 (middle) - green -->
+  <g filter="url(#shadow)">
+    <rect x="372" y="592" width="280" height="80" rx="14" fill="#00b894"/>
+    <rect x="372" y="592" width="280" height="34" rx="14" ry="14" fill="url(#a-top)"/>
+    <rect x="390" y="598" width="110" height="6" rx="3" fill="white" opacity="0.18"/>
+  </g>
+
+  <!-- Block 1 (top) - blue -->
+  <g filter="url(#shadow)">
+    <rect x="382" y="504" width="260" height="80" rx="14" fill="#0984e3"/>
+    <rect x="382" y="504" width="260" height="34" rx="14" ry="14" fill="url(#t-top)"/>
+    <rect x="400" y="510" width="100" height="6" rx="3" fill="white" opacity="0.18"/>
+  </g>
+
+  <!-- STACKO text -->
+  <!-- S -->
+  <g filter="url(#shadow)">
+    <rect x="118" y="190" width="108" height="105" rx="18" fill="#6c5ce7"/>
+    <rect x="118" y="190" width="108" height="45" rx="18" ry="18" fill="url(#s-top)"/>
+    <rect x="134" y="196" width="44" height="6" rx="3" fill="white" opacity="0.2"/>
+    <text x="172" y="260" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="58" fill="white">S</text>
+  </g>
+
+  <!-- T -->
+  <g filter="url(#shadow)">
+    <rect x="240" y="190" width="108" height="105" rx="18" fill="#0984e3"/>
+    <rect x="240" y="190" width="108" height="45" rx="18" ry="18" fill="url(#t-top)"/>
+    <rect x="256" y="196" width="44" height="6" rx="3" fill="white" opacity="0.2"/>
+    <text x="294" y="260" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="58" fill="white">T</text>
+  </g>
+
+  <!-- A -->
+  <g filter="url(#shadow)">
+    <rect x="362" y="190" width="108" height="105" rx="18" fill="#00b894"/>
+    <rect x="362" y="190" width="108" height="45" rx="18" ry="18" fill="url(#a-top)"/>
+    <rect x="378" y="196" width="44" height="6" rx="3" fill="white" opacity="0.2"/>
+    <text x="416" y="260" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="58" fill="white">A</text>
+  </g>
+
+  <!-- C -->
+  <g filter="url(#shadow)">
+    <rect x="484" y="190" width="108" height="105" rx="18" fill="#f0c674"/>
+    <rect x="484" y="190" width="108" height="45" rx="18" ry="18" fill="url(#c-top)"/>
+    <rect x="500" y="196" width="44" height="6" rx="3" fill="white" opacity="0.2"/>
+    <text x="538" y="260" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="58" fill="white">C</text>
+  </g>
+
+  <!-- K -->
+  <g filter="url(#shadow)">
+    <rect x="606" y="190" width="108" height="105" rx="18" fill="#e17055"/>
+    <rect x="606" y="190" width="108" height="45" rx="18" ry="18" fill="url(#k-top)"/>
+    <rect x="622" y="196" width="44" height="6" rx="3" fill="white" opacity="0.2"/>
+    <text x="660" y="260" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="58" fill="white">K</text>
+  </g>
+
+  <!-- O -->
+  <g filter="url(#shadow)">
+    <rect x="728" y="190" width="108" height="105" rx="18" fill="#e84393"/>
+    <rect x="728" y="190" width="108" height="45" rx="18" ry="18" fill="url(#o-top)"/>
+    <rect x="744" y="196" width="44" height="6" rx="3" fill="white" opacity="0.2"/>
+    <text x="782" y="260" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="58" fill="white">O</text>
+  </g>
+
+  <!-- Tagline -->
+  <text x="512" y="340" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="600" font-size="26" fill="#a29bfe" opacity="0.7" letter-spacing="6">STACK · CHOP · REPEAT</text>
+
+  <!-- Decorative sparkles -->
+  <circle cx="160" cy="450" r="3" fill="white" opacity="0.3"/>
+  <circle cx="850" cy="400" r="2.5" fill="white" opacity="0.25"/>
+  <circle cx="520" cy="470" r="2" fill="#f0c674" opacity="0.3"/>
+  <circle cx="300" cy="830" r="2" fill="#a29bfe" opacity="0.2"/>
+  <circle cx="720" cy="850" r="3" fill="#00b894" opacity="0.2"/>
+</svg>

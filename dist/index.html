@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>STACKO — Stack · Chop · Repeat</title>
+  <meta name="description" content="STACKO — the addictive stacking game. Tap to stack, overshoot gets chopped! How high can you go?">
+  <meta name="theme-color" content="#06060c">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/stacko-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/stacko-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #06060c; }
+    #game { width: 100%; height: 100%; }
+    #game canvas { display: block; width: 100% !important; height: 100% !important; }
+    #ad-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+      padding-top: 15px;
+      padding-bottom: max(15px, env(safe-area-inset-bottom, 0px));
+      background: #0a0a12;
+      display: flex; align-items: center; justify-content: center;
+      color: #4a4a5a; font-family: 'Inter', sans-serif; font-size: 11px;
+      letter-spacing: 1px; user-select: none; pointer-events: none;
+    }
+    #ad-banner.hidden { display: none; }
+    #ad-banner span { opacity: 0.6; }
+  </style>
+  <script type="module" crossorigin src="./assets/index-CsPhffHT.js"></script>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="ad-banner"><span>AD SPACE — Tap to remove ads ($0.99)</span></div>
+</body>
+</html>

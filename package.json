@@ -1,0 +1,30 @@
+{
+  "name": "stacko",
+  "version": "1.0.0",
+  "description": "STACKO — Stack · Chop · Repeat",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cap:sync": "vite build && cap sync",
+    "cap:android": "vite build && cap sync && cap open android",
+    "cap:ios": "vite build && cap sync && cap open ios",
+    "cap:run:android": "vite build && cap sync && cap run android",
+    "cap:run:ios": "vite build && cap sync && cap run ios"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "phaser": "^3.90.0",
+    "typescript": "^6.0.2",
+    "vite": "^5.4.21"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0"
+  }
+}

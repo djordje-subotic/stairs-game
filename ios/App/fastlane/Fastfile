@@ -1,0 +1,53 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Create certificates and provisioning profiles"
+  lane :certs do
+    get_certificates(
+      development: false,
+      force: false,
+    )
+    get_provisioning_profile(
+      app_identifier: "com.stacko.game",
+      force: false,
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # Fetch certs and profiles
+    get_certificates
+    get_provisioning_profile(app_identifier: "com.stacko.game")
+
+    # Build
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "./build",
+      output_name: "STACKO.ipa",
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+    )
+  end
+
+  desc "Just build the IPA"
+  lane :build_only do
+    get_certificates
+    get_provisioning_profile(app_identifier: "com.stacko.game")
+
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "./build",
+      output_name: "STACKO.ipa",
+    )
+  end
+end

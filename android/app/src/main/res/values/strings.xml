@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">STACKO</string>
+    <string name="title_activity_main">STACKO</string>
+    <string name="package_name">com.stacko.game</string>
+    <string name="custom_url_scheme">com.stacko.game</string>
+</resources>
