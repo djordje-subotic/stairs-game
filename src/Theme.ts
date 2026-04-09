@@ -3,6 +3,14 @@ import Phaser from 'phaser';
 export const F_HEAD = "'Space Grotesk', 'Inter', sans-serif";
 export const F_BODY = "'Inter', sans-serif";
 
+/** Scale factor for tablet — makes UI bigger on wider screens */
+export function uiScale(): number {
+  const w = window.innerWidth;
+  if (w > 600) return 1.5;   // iPad
+  if (w > 430) return 1.2;   // large phone
+  return 1;
+}
+
 export const C = {
   bg1: 0x06060c,
   bg2: 0x0c0c18,
@@ -55,7 +63,8 @@ export function createGlassBtn(
   scene: Phaser.Scene, x: number, y: number, label: string,
   opts: { w?: number; h?: number; color?: string; fontSize?: string; filled?: boolean; fillColor?: number } = {},
 ) {
-  const w = opts.w ?? 160, h = opts.h ?? 44;
+  const s = uiScale();
+  const w = (opts.w ?? 160) * s, h = (opts.h ?? 44) * s;
   const bx = x - w / 2, by = y - h / 2;
 
   // Pill background — starts invisible and small
@@ -76,9 +85,10 @@ export function createGlassBtn(
   };
   drawPill(0.06);
 
-  // Text label
+  // Text label — scaled for tablets
+  const baseFontSize = parseInt(opts.fontSize ?? '14px');
   const text = scene.add.text(x, y, label, {
-    fontSize: opts.fontSize ?? '14px',
+    fontSize: `${Math.round(baseFontSize * s)}px`,
     fontFamily: F_BODY,
     fontStyle: '600',
     color: opts.color ?? C.white,

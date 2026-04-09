@@ -203,8 +203,9 @@ export class BackgroundManager {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.W = scene.scale.width;
-    this.H = scene.scale.height;
+    // MUST use window dimensions — Phaser scale may not be ready yet, especially on iPad
+    this.W = window.innerWidth || 430;
+    this.H = window.innerHeight || 932;
     this.blockThemeId = store.getCurrentTheme();
     this.bgGfx = scene.add.graphics().setDepth(-10);
     this.decoGfx = scene.add.graphics().setDepth(-5).setScrollFactor(0);
@@ -227,6 +228,9 @@ export class BackgroundManager {
 
   update(dt: number, camY: number) {
     this.elapsed += dt * 0.001;
+    // Keep W/H updated for resize
+    const liveW = this.scene.scale.width;
+    const liveH = this.scene.scale.height;
 
     // Floaters — sinusoidal bob
     for (const f of this.floaters) {
@@ -238,19 +242,19 @@ export class BackgroundManager {
     for (const r of this.risers) {
       r.obj.y -= r.speed;
       r.obj.x += Math.sin(this.elapsed * r.drift) * 0.3;
-      if (r.obj.y < camY - this.H) {
-        r.obj.y = camY + this.H + 50;
-        r.obj.x = Phaser.Math.Between(0, this.W);
+      if (r.obj.y < camY - liveH) {
+        r.obj.y = camY + liveH + 50;
+        r.obj.x = Phaser.Math.Between(0, liveW);
       }
     }
 
-    // Fallers — themed falling particles (petals, bubbles, stars, sprinkles)
+    // Fallers — themed falling particles
     for (const fl of this.fallers) {
       fl.obj.y += fl.speed;
       fl.obj.x += Math.sin(this.elapsed * fl.drift + fl.driftPhase) * fl.driftAmp;
-      if (fl.obj.y > camY + this.H + 30) {
+      if (fl.obj.y > camY + liveH + 30) {
         fl.obj.y = camY - 30;
-        fl.obj.x = Phaser.Math.Between(0, this.W);
+        fl.obj.x = Phaser.Math.Between(0, liveW);
       }
     }
 
@@ -308,7 +312,9 @@ export class BackgroundManager {
     const t = this.elapsed;
     const theme = this.getTheme();
     const g = this.decoGfx;
-    const W = this.W, H = this.H;
+    // Use live viewport size so it works on iPad too
+    const W = this.scene.scale.width;
+    const H = this.scene.scale.height;
     const tid = this.blockThemeId;
 
     // ── Universal full-screen ambient: scattered glowing dots across ENTIRE viewport ──
