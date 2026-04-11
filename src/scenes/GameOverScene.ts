@@ -3,6 +3,7 @@ import { getNextTier } from '../Difficulty';
 import { sound } from '../SoundManager';
 import { store } from '../Store';
 import { F_HEAD, F_BODY, C, drawModernBg, drawGlassCard, createGlassBtn } from '../Theme';
+import { ads } from '../AdManager';
 
 let sessionAttempts = 0;
 
@@ -270,7 +271,10 @@ export class GameOverScene extends Phaser.Scene {
       opts.push({
         icon: '📺', label: 'WATCH AD', sub: 'free continue',
         col: 0x6c5ce7, tCol: '#a29bfe',
-        tap: () => { /* TODO: rewarded ad SDK */ sound.perfect(); this.doContinue(data); },
+        tap: async () => {
+          const watched = await ads.showRewarded();
+          if (watched) { sound.perfect(); this.doContinue(data); }
+        },
       });
     }
 

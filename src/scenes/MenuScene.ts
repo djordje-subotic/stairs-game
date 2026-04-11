@@ -4,6 +4,7 @@ import { sound } from '../SoundManager';
 import { store } from '../Store';
 import { F_HEAD, F_BODY, C, drawModernBg, createGlassBtn } from '../Theme';
 import { createLogo } from '../Logo';
+import { purchases } from '../PurchaseManager';
 
 // Safe top offset for Dynamic Island / notch (~55px on iPhone 14+)
 const TOP_SAFE = 60;
@@ -78,17 +79,13 @@ export class MenuScene extends Phaser.Scene {
 
     // REMOVE ADS (if not already ad-free)
     if (!store.isAdFree()) {
-      const { hit: removeHit } = createGlassBtn(this, w / 2, h * 0.57, 'REMOVE ADS — $0.99', {
-        color: C.muted, fontSize: '11px', w: 200,
-      });
-      removeHit.on('pointerdown', (p: any, lx: number, ly: number, e: Phaser.Types.Input.EventData) => {
-        e.stopPropagation();
-        sound.tick();
-        if (confirm('Remove ads for $0.99?')) {
-          store.setAdFree();
-          (window as any).__hideAds?.();
-          this.scene.restart();
-        }
+      const removeBtn = this.add.text(w / 2, h * 0.57, 'REMOVE ADS — $0.99', {
+        fontSize: '11px', fontFamily: F_BODY, fontStyle: '600', color: C.muted, letterSpacing: 2,
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      removeBtn.on('pointerup', () => {
+        store.setAdFree();
+        (window as any).__hideAds?.();
+        this.scene.restart();
       });
     }
 
@@ -128,7 +125,13 @@ export class MenuScene extends Phaser.Scene {
       this.add.text(w * 0.32, ty + i * 17, t.l, { fontSize: '10px', fontFamily: F_HEAD, fontStyle: '700', color: t.c, letterSpacing: 2 }).setOrigin(0, 0.5);
     });
 
-    this.input.on('pointerdown', () => { sound.snap(); this.scene.start('GameScene'); });
+    // TAP TO START — only if not tapping on a button
+    this.input.on('pointerdown', (_p: any, gameObjects: any[]) => {
+      // If tap hit an interactive object (button), don't start game
+      if (gameObjects && gameObjects.length > 0) return;
+      sound.snap();
+      this.scene.start('GameScene');
+    });
     this.input.keyboard?.on('keydown-SPACE', () => { sound.snap(); this.scene.start('GameScene'); });
     this.cameras.main.fadeIn(250, 6, 6, 12);
   }

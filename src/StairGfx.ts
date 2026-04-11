@@ -11,26 +11,6 @@ function getBlockTheme(): BlockThemeDef {
   return BLOCK_THEMES.find(t => t.id === id) || BLOCK_THEMES[0];
 }
 
-/**
- * Draw a block into a Graphics object, clipped to (0,0,w,h).
- * Uses a clipping background rect to mask any overflow from drawBlock.
- */
-function drawClippedBlock(
-  scene: Phaser.Scene,
-  g: Phaser.GameObjects.Graphics,
-  theme: BlockThemeDef,
-  w: number, h: number,
-  colorIdx: number,
-) {
-  // Draw a dark base first so nothing shows through
-  g.fillStyle(0x000000, 0.01);
-  g.fillRect(0, 0, w, h);
-  // Draw the theme block
-  theme.drawBlock(g, w, h, colorIdx);
-  // Cover any overflow: draw opaque background-colored bars outside bounds
-  // This is simpler and more reliable than masks for moving objects
-}
-
 export function createStair(
   scene: Phaser.Scene,
   x: number, y: number,
@@ -48,8 +28,10 @@ export function createStair(
   g.fillStyle(0x000000, 0.1);
   g.fillRoundedRect(2, 3, w, SH, 6);
 
-  // Theme block
-  drawClippedBlock(scene, g, theme, w, SH, colorIdx);
+  // Theme-specific drawing
+  g.fillStyle(0x000000, 0.01);
+  g.fillRect(0, 0, w, SH);
+  theme.drawBlock(g, w, SH, colorIdx);
   c.add(g);
 
   // Edge highlight for alignment
@@ -78,7 +60,7 @@ export function createFragment(
   const g = scene.add.graphics();
   const theme = getBlockTheme();
 
-  drawClippedBlock(scene, g, theme, w, SH, colorIdx);
+  theme.drawFragment(g, w, SH, colorIdx);
 
   // Cracked edge
   g.fillStyle(0xffffff, 0.12);
