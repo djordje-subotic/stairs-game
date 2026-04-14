@@ -21,7 +21,7 @@ platform :ios do
 
     # Build
     build_app(
-      workspace: "App.xcworkspace",
+      project: "App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
       clean: true,
@@ -42,7 +42,7 @@ platform :ios do
     get_provisioning_profile(app_identifier: "com.stackoblock.game")
 
     build_app(
-      workspace: "App.xcworkspace",
+      project: "App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
       clean: true,

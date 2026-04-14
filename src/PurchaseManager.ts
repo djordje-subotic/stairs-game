@@ -5,60 +5,68 @@ const REMOVE_ADS_ID = 'com.stackoblock.game.removeads';
 
 let storePlugin: any = null;
 let initialized = false;
+let readyPromise: Promise<void> | null = null;
 
 export const purchases = {
   async init() {
-    if (initialized) return;
+    if (initialized) return readyPromise ?? Promise.resolve();
     initialized = true;
 
-    try {
-      // cordova-plugin-purchase exposes CdvPurchase on window
-      const CdvPurchase = (window as any).CdvPurchase;
-      if (!CdvPurchase) {
-        console.warn('CdvPurchase not available — running in browser?');
-        return;
-      }
+    readyPromise = (async () => {
+      try {
+        const CdvPurchase = (window as any).CdvPurchase;
+        if (!CdvPurchase) {
+          console.warn('[IAP] CdvPurchase not available — running in browser?');
+          return;
+        }
 
-      storePlugin = CdvPurchase.store;
+        storePlugin = CdvPurchase.store;
+        console.log('[IAP] Registering product', REMOVE_ADS_ID);
 
-      // Register the product
-      storePlugin.register([{
-        id: REMOVE_ADS_ID,
-        type: CdvPurchase.ProductType.NON_CONSUMABLE,
-        platform: CdvPurchase.Platform.APPLE_APPSTORE,
-      }]);
+        storePlugin.register([{
+          id: REMOVE_ADS_ID,
+          type: CdvPurchase.ProductType.NON_CONSUMABLE,
+          platform: CdvPurchase.Platform.APPLE_APPSTORE,
+        }]);
 
-      // Handle approved purchases
-      storePlugin.when().approved((transaction: any) => {
-        // Verify and finish
-        transaction.verify();
-      });
+        storePlugin.when().approved((transaction: any) => {
+          console.log('[IAP] Transaction approved', transaction?.products);
+          transaction.verify();
+        });
 
-      storePlugin.when().verified((receipt: any) => {
-        // Grant the purchase
-        store.setAdFree();
-        ads.removeBanner();
-        (window as any).__hideAds?.();
-        receipt.finish();
-        console.log('Remove Ads purchased successfully!');
-      });
-
-      // Check if already owned (restore purchases)
-      storePlugin.when().productUpdated((product: any) => {
-        if (product.id === REMOVE_ADS_ID && product.owned) {
+        storePlugin.when().verified((receipt: any) => {
+          console.log('[IAP] Receipt verified — granting ad-free');
           store.setAdFree();
           ads.removeBanner();
           (window as any).__hideAds?.();
-        }
-      });
+          receipt.finish();
+        });
 
-      // Initialize the store
-      await storePlugin.initialize([CdvPurchase.Platform.APPLE_APPSTORE]);
-      await storePlugin.update();
+        storePlugin.when().productUpdated((product: any) => {
+          console.log('[IAP] productUpdated', product.id, 'owned:', product.owned, 'canPurchase:', product.canPurchase);
+          if (product.id === REMOVE_ADS_ID && product.owned) {
+            store.setAdFree();
+            ads.removeBanner();
+            (window as any).__hideAds?.();
+          }
+        });
 
-    } catch (e) {
-      console.warn('Purchase init failed:', e);
-    }
+        storePlugin.error((err: any) => {
+          console.warn('[IAP] store error', err?.code, err?.message);
+        });
+
+        console.log('[IAP] initialize()');
+        await storePlugin.initialize([CdvPurchase.Platform.APPLE_APPSTORE]);
+        console.log('[IAP] update()');
+        await storePlugin.update();
+        const p = storePlugin.get(REMOVE_ADS_ID);
+        console.log('[IAP] init complete, product loaded?', !!p, 'offers:', p?.offers?.length);
+      } catch (e) {
+        console.warn('[IAP] init failed:', e);
+      }
+    })();
+
+    return readyPromise;
   },
 
   /** Buy Remove Ads */
@@ -67,27 +75,45 @@ export const purchases = {
 
     try {
       const CdvPurchase = (window as any).CdvPurchase;
+      const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
       if (!storePlugin || !CdvPurchase) {
-        // Fallback for testing — just set ad-free
-        console.warn('Store not available, simulating purchase');
+        if (isNative) {
+          console.warn('Store not available on native platform');
+          return false;
+        }
+        // Browser-only fallback for local dev/testing
+        console.warn('Store not available, simulating purchase (browser dev only)');
         store.setAdFree();
         ads.removeBanner();
         (window as any).__hideAds?.();
         return true;
       }
 
-      const product = storePlugin.get(REMOVE_ADS_ID);
+      // Ensure init finished + product list populated
+      if (readyPromise) await readyPromise;
+
+      let product = storePlugin.get(REMOVE_ADS_ID);
+      if (!product || !product.getOffer?.()) {
+        console.warn('[IAP] Product not ready, calling update() and retrying');
+        try { await storePlugin.update(); } catch (e) { console.warn('[IAP] update() failed', e); }
+        product = storePlugin.get(REMOVE_ADS_ID);
+      }
+
       if (!product) {
-        console.warn('Product not found');
+        const msg = 'Product not found. Make sure Paid Apps agreement is signed and you are logged in with a Sandbox tester.';
+        console.warn('[IAP]', msg);
+        alert(msg);
         return false;
       }
 
       const offer = product.getOffer();
       if (!offer) {
-        console.warn('No offer available');
+        console.warn('[IAP] Product exists but no offer', product);
+        alert('This product is not available for purchase right now. Please try again later.');
         return false;
       }
 
+      console.log('[IAP] Ordering offer', offer.id);
       await offer.order();
       return true;
 

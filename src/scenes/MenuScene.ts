@@ -82,10 +82,42 @@ export class MenuScene extends Phaser.Scene {
       const removeBtn = this.add.text(w / 2, h * 0.57, 'REMOVE ADS — $0.99', {
         fontSize: '11px', fontFamily: F_BODY, fontStyle: '600', color: C.muted, letterSpacing: 2,
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      removeBtn.on('pointerup', () => {
-        store.setAdFree();
-        (window as any).__hideAds?.();
-        this.scene.restart();
+      let busy = false;
+      removeBtn.on('pointerup', async (_p: any, _lx: number, _ly: number, e: Phaser.Types.Input.EventData) => {
+        e.stopPropagation();
+        if (busy) return;
+        busy = true;
+        sound.tick();
+        removeBtn.setText('PROCESSING…');
+        const ok = await purchases.buyRemoveAds();
+        busy = false;
+        if (ok && store.isAdFree()) {
+          (window as any).__hideAds?.();
+          this.scene.restart();
+        } else {
+          removeBtn.setText('REMOVE ADS — $0.99');
+        }
+      });
+
+      const restoreBtn = this.add.text(w / 2, h * 0.605, 'Restore Purchases', {
+        fontSize: '10px', fontFamily: F_BODY, fontStyle: '500', color: C.muted, letterSpacing: 1,
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      restoreBtn.setAlpha(0.7);
+      let restoring = false;
+      restoreBtn.on('pointerup', async (_p: any, _lx: number, _ly: number, e: Phaser.Types.Input.EventData) => {
+        e.stopPropagation();
+        if (restoring) return;
+        restoring = true;
+        sound.tick();
+        restoreBtn.setText('Restoring…');
+        const ok = await purchases.restore();
+        restoring = false;
+        if (ok && store.isAdFree()) {
+          (window as any).__hideAds?.();
+          this.scene.restart();
+        } else {
+          restoreBtn.setText('Restore Purchases');
+        }
       });
     }
 
