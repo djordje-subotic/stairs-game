@@ -273,7 +273,11 @@ export class GameOverScene extends Phaser.Scene {
         col: 0x6c5ce7, tCol: '#a29bfe',
         tap: async () => {
           const watched = await ads.showRewarded();
-          if (watched) { sound.perfect(); this.doContinue(data); }
+          if (watched) {
+            this.showResumePrompt(w, h, data, allElements);
+          } else {
+            this.transitionToRetry(w, h, data, allElements);
+          }
         },
       });
     }
@@ -323,6 +327,61 @@ export class GameOverScene extends Phaser.Scene {
       }});
     }
     this.time.delayedCall(250, () => this.buildRetryUI(w, h, data));
+  }
+
+  private showResumePrompt(w: number, h: number, data: GameOverData, toHide: Phaser.GameObjects.GameObject[]) {
+    // Fade out the continue card
+    for (const obj of toHide) {
+      this.tweens.add({ targets: obj, alpha: 0, duration: 200, onComplete: () => {
+        if ('destroy' in obj && typeof (obj as any).destroy === 'function') (obj as any).destroy();
+      }});
+    }
+
+    this.time.delayedCall(250, () => {
+      const cardW = w * 0.82;
+      const cardH = 110;
+      const cardX = (w - cardW) / 2;
+      const cardY = h * 0.5;
+      const card = drawGlassCard(this, cardX, cardY, cardW, cardH, 14);
+      card.setAlpha(0);
+      this.tweens.add({ targets: card, alpha: 1, duration: 250 });
+
+      const hint = this.add.text(w / 2, cardY + 22, 'READY?', {
+        fontSize: '11px', fontFamily: F_BODY, fontStyle: '600', color: C.accent, letterSpacing: 6,
+      }).setOrigin(0.5).setAlpha(0);
+      this.tweens.add({ targets: hint, alpha: 1, duration: 250, delay: 100 });
+
+      // Big RESUME button
+      const btnW = cardW - 30;
+      const btnH = 50;
+      const btnX = w / 2;
+      const btnY = cardY + 68;
+
+      const bg = this.add.graphics();
+      bg.fillStyle(0x6c5ce7, 0.2);
+      bg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 10);
+      bg.lineStyle(1.5, 0x6c5ce7, 0.5);
+      bg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 10);
+
+      const label = this.add.text(btnX, btnY, 'RESUME', {
+        fontSize: '16px', fontFamily: F_HEAD, fontStyle: '700', color: '#a29bfe', letterSpacing: 4,
+      }).setOrigin(0.5);
+
+      const hit = this.add.rectangle(btnX, btnY, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
+
+      bg.setAlpha(0); label.setAlpha(0);
+      this.tweens.add({ targets: [bg, label], alpha: 1, duration: 300, delay: 150 });
+      this.tweens.add({
+        targets: label, scaleX: { from: 1, to: 1.04 }, scaleY: { from: 1, to: 1.04 },
+        duration: 800, yoyo: true, repeat: -1, delay: 500, ease: 'Sine.easeInOut',
+      });
+
+      hit.on('pointerdown', (_p: any, _lx: number, _ly: number, e: Phaser.Types.Input.EventData) => {
+        e.stopPropagation();
+        sound.perfect();
+        this.doContinue(data);
+      });
+    });
   }
 
   private buildRetryUI(w: number, h: number, _data: GameOverData) {

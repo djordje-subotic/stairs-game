@@ -6,6 +6,7 @@ const REWARDED_ID = 'ca-app-pub-3307486877162157/8384299813';
 
 let initialized = false;
 let rewardedResolve: ((watched: boolean) => void) | null = null;
+let rewardEarned = false;
 
 export const ads = {
   async init() {
@@ -17,19 +18,24 @@ export const ads = {
         initializeForTesting: false,
       });
 
-      // Listen for rewarded ad events
+      // Rewarded event — AdMob may fire this before or after Dismissed.
+      // Just flag it; we resolve on Dismissed or FailedToShow so the promise
+      // always settles even if Dismissed arrives first.
       AdMob.addListener(RewardAdPluginEvents.Rewarded, (_info: AdMobRewardItem) => {
-        // User watched the full ad — grant continue
-        if (rewardedResolve) { rewardedResolve(true); rewardedResolve = null; }
+        rewardEarned = true;
+        if (rewardedResolve) { rewardedResolve(true); rewardedResolve = null; rewardEarned = false; }
       });
 
       AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
-        // Ad dismissed without completing — no reward
-        if (rewardedResolve) { rewardedResolve(false); rewardedResolve = null; }
+        if (rewardedResolve) { rewardedResolve(rewardEarned); rewardedResolve = null; rewardEarned = false; }
       });
 
       AdMob.addListener(RewardAdPluginEvents.FailedToLoad, () => {
-        if (rewardedResolve) { rewardedResolve(false); rewardedResolve = null; }
+        if (rewardedResolve) { rewardedResolve(false); rewardedResolve = null; rewardEarned = false; }
+      });
+
+      AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => {
+        if (rewardedResolve) { rewardedResolve(rewardEarned); rewardedResolve = null; rewardEarned = false; }
       });
 
     } catch (e) {
@@ -69,15 +75,16 @@ export const ads = {
   /** Show rewarded ad — returns true if user watched it fully */
   async showRewarded(): Promise<boolean> {
     try {
+      rewardEarned = false;
       await AdMob.prepareRewardVideoAd({ adId: REWARDED_ID });
 
       return new Promise<boolean>((resolve) => {
         rewardedResolve = resolve;
         AdMob.showRewardVideoAd();
-        // Timeout fallback — if no event fires in 60s, assume failed
+        // Safety timeout — resolve with whatever reward state we have so UI never locks
         setTimeout(() => {
-          if (rewardedResolve) { rewardedResolve(false); rewardedResolve = null; }
-        }, 60000);
+          if (rewardedResolve) { rewardedResolve(rewardEarned); rewardedResolve = null; rewardEarned = false; }
+        }, 120000);
       });
     } catch (e) {
       console.warn('Rewarded ad failed:', e);
